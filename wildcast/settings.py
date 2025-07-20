@@ -25,7 +25,10 @@ SECRET_KEY = 'django-insecure-ol#)#u#=8!*+t!==_*@c_3&l_le6*sc@t5w3*_t^+fr+*x4=of
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'wildcast.azurewebsites.net',
+    '20.59.88.1',
+]
 
 
 # Application definition
