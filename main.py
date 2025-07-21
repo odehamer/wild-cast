@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from prophet import Prophet
 from sklearn.metrics import r2_score
+from meteostat import Point, Daily
+
 
 data = pd.read_csv('data/attendance.csv', header=None,)
 data = data.drop(data.columns[[0,3]], axis=1)
@@ -14,6 +16,54 @@ data['y'] = data['y'].astype(float)
 m = Prophet()
 m.add_country_holidays(country_name='US')
 m.fit(data)
+
+start_date = data['ds'].min()
+end_date = data['ds'].max()
+location = Point(33.0980, -116.9967, 150) # Safari park coordinates
+weather_data = Daily(location, start_date, end_date)
+weather_data = weather_data.fetch()
+
+# Convert temperature to Fahrenheit
+weather_data['tavg_fahrenheit'] = weather_data['tavg'] * 9/5 + 32
+
+data['temp'] = weather_data['tavg_fahrenheit'].values
+data['prcp'] = weather_data['prcp'].fillna(0).values
+m.add_regressor('prcp', prior_scale=0.1)
+print(data.to_string())
+print(weather_data.to_string())
+
+future = m.make_future_dataframe(periods=0)
+future['floor'] = 0
+forecast = m.predict(future)
+
+temp_df = pd.DataFrame({
+    'prediction_actual_difference': data['y'] - forecast['yhat'],
+    'temp': data['temp']
+})
+
+temp_df['temp'] = temp_df['temp'].astype(float)
+
+prec_df = pd.DataFrame({
+    'prediction_actual_difference': data['y'] - forecast['yhat'],
+    'precipitation': weather_data['prcp'].fillna(0).values
+})
+
+plt.figure(figsize=(12, 6))
+plt.scatter(temp_df['temp'], temp_df['prediction_actual_difference'], alpha=0.5)
+plt.title('Temperature vs Prediction-Actual Difference')
+plt.xlabel('Average Temperature (°F)')
+plt.ylabel('Prediction - Actual Difference')
+plt.grid()
+plt.savefig('static/temperature_vs_difference.png') 
+
+plt.figure(figsize=(12, 6))
+plt.scatter(prec_df['precipitation'], prec_df['prediction_actual_difference'], alpha=0.5)
+plt.title('Precipitation vs Prediction-Actual Difference')
+plt.xlabel('Daily Precipitation (mm)')
+plt.ylabel('Prediction - Actual Difference')
+plt.grid()
+plt.savefig('static/precipitaion_vs_difference.png') 
+
 
 # Make predictions for the same dates as the historical data
 historical_forecast = m.predict(data[['ds']])
