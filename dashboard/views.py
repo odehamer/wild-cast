@@ -309,7 +309,7 @@ def get_plot():
     
     return 'static/forecast_plot.png'
 
-def hello_world(request):
+def homepage(request):
     """Return a nicely formatted hello world message with predictions."""
     
     # Get both today's and tomorrow's predictions
