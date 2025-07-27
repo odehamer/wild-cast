@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wild Cast - Visitor Attendance Predictions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 800px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+        p {
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+        .subtitle {
+            color: #888;
+            font-style: italic;
+        }
+        .predictions-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .prediction-box {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            flex: 1;
+            min-width: 250px;
+            max-width: 350px;
+        }
+        .prediction-box.today {
+            border-color: #28a745;
+        }
+        .prediction-box.tomorrow {
+            border-color: #667eea;
+        }
+        .prediction-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .prediction-value.today {
+            color: #28a745;
+        }
+        .prediction-value.tomorrow {
+            color: #667eea;
+        }
+        .prediction-value.upper-bound {
+            font-size: 1em;
+            color: #dc3545;
+            font-weight: normal;
+            margin: 5px 0;
+        }
+        .prediction-value.lower-bound {
+            font-size: 1em;
+            color: #6c757d;
+            font-weight: normal;
+            margin: 5px 0;
+        }
+        .prediction-date {
+            color: #666;
+            font-size: 1.1em;
+        }
+        .weather-info {
+            background: #e9ecef;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 0.9em;
+            color: #495057;
+        }
+        .weather-info .weather-item {
+            display: inline-block;
+            margin: 0 10px;
+            font-weight: bold;
+        }
+        .temp {
+            color: #dc3545;
+        }
+        .precip {
+            color: #007bff;
+        }
+        .week-forecast {
+            margin-top: 40px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .week-forecast h3 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .forecast-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .forecast-table th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+        .forecast-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .forecast-table tr:last-child td {
+            border-bottom: none;
+        }
+        .forecast-table tr:hover {
+            background: #f5f5f5;
+        }
+        .prediction-cell {
+            font-weight: bold;
+            color: #667eea;
+            text-align: center;
+        }
+        .busiest-day {
+            background: #fff3cd !important;
+            border-left: 4px solid #f39c12 !important;
+        }
+        .busiest-day:hover {
+            background: #ffeaa7 !important;
+        }
+        .busiest-day .prediction-cell {
+            color: #e67e22;
+            font-weight: bold;
+        }
+        .slowest-day {
+            background: #d1ecf1 !important;
+            border-left: 4px solid #17a2b8 !important;
+        }
+        .slowest-day:hover {
+            background: #bee5eb !important;
+        }
+        .slowest-day .prediction-cell {
+            color: #138496;
+            font-weight: bold;
+        }
+        .forecast-chart {
+            margin-top: 40px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+        .forecast-chart h3 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .forecast-chart img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: white;
+            padding: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🦁</div>
+        <h1>Wild Cast</h1>
+        <p>Welcome to <strong>Wild Cast</strong> - Your Wildlife Attendance Intelligence</p>
+        <p class="subtitle">Your assitant in predicting Safari Park attendance</p>
+        
+        <div class="predictions-container">
+            <div class="prediction-box today">
+                <h3>Today's Prediction</h3>
+                <div class="prediction-value today">{{ todays_data.prediction|floatformat:0 }}</div>
+                <div class="prediction-value upper-bound">High End: {{ todays_data.upper_bound|floatformat:0 }}</div>
+                <div class="prediction-value lower-bound">Low End: {{ todays_data.lower_bound|floatformat:0 }}</div>
+                <div class="weather-info">
+                    <span class="weather-item temp">🌡️ {{ todays_data.temperature|floatformat:0 }}°F</span>
+                    <span class="weather-item precip">🌧️ {{ todays_data.precipitation|floatformat:1 }}mm</span>
+                </div>
+                <div class="prediction-date">for {{ todays_data.date }}</div>
+            </div>
+            
+            <div class="prediction-box tomorrow">
+                <h3>Tomorrow's Prediction</h3>
+                <div class="prediction-value tomorrow">{{ tomorrows_data.prediction|floatformat:0 }}</div>
+                <div class="prediction-value upper-bound">High End: {{ tomorrows_data.upper_bound|floatformat:0 }}</div>
+                <div class="prediction-value lower-bound">Low End: {{ tomorrows_data.lower_bound|floatformat:0 }}</div>
+                <div class="weather-info">
+                    <span class="weather-item temp">🌡️ {{ tomorrows_data.temperature|floatformat:0 }}°F</span>
+                    <span class="weather-item precip">🌧️ {{ tomorrows_data.precipitation|floatformat:1 }}mm</span>
+                </div>
+                <div class="prediction-date">for {{ tomorrows_data.date }}</div>
+            </div>
+        </div>
+        
+        <div class="week-forecast">
+            <h3>📅 7-Day Visitor Forecast</h3>
+            <table class="forecast-table">
+                <thead>
+                    <tr>
+                        <th>Day</th>
+                        <th>Date</th>
+                        <th>Expected Visitors</th>
+                        <th>Weather</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in next_week_df %}
+                    <tr class="{% if row.date == busiest_day.date %}busiest-day{% elif row.date == slowest_day.date %}slowest-day{% endif %}">
+                        <td>{{ row.day_of_week }}</td>
+                        <td>{{ row.date }}</td>
+                        <td class="prediction-cell">{{ row.prediction|floatformat:0 }}</td>
+                        <td style="text-align: center;">
+                            <span class="temp">🌡️ {{ row.temperature|floatformat:0 }}°F</span><br>
+                            <span class="precip">🌧️ {{ row.precipitation|floatformat:1 }}mm</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="forecast-chart">
+            <h3>📈 30-Day Forecast Trend</h3>
+            <img src="{{ plot_path }}?{{ todays_data.date }}" alt="30-Day Visitor Forecast Chart" />
+            <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                Blue line shows expected visitors, gray area shows confidence range
+            </p>
+        </div>
+    </div>
+</body>
+</html>
