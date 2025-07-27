@@ -28,6 +28,8 @@ DEBUG = True
 ALLOWED_HOSTS = [
     'wildcast.azurewebsites.net',
     '20.59.88.1',
+    'localhost',
+    '127.0.0.1',
 ]
 
 

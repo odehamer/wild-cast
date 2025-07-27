@@ -2,3 +2,5 @@ pandas
 prophet
 plotly
 django
+meteostat
+requests
