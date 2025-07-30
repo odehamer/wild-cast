@@ -7,12 +7,18 @@ from prophet import Prophet
 from datetime import datetime, timedelta, date
 from meteostat import Point, Daily
 import requests
+import os
+import django
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'wildcast.settings')
+django.setup()
+
+from dashboard.models import DailyAttendance, Location
 
 
 def get_data():
     """Load and preprocess the attendance data."""
     data = pd.read_csv('data/attendance.csv', header=None)
-    data = data.drop(data.columns[[0,3]], axis=1)
     data.columns = ['ds', 'y']
     data['ds'] = pd.to_datetime(data['ds'], yearfirst=True)
     data['y'] = data['y'].str.replace(',', '')
@@ -308,6 +314,76 @@ def get_plot():
     plt.close()
     
     return 'static/forecast_plot.png'
+    
+def get_historical_weather_for_date(target_date):
+    """Get historical weather data for a specific date."""
+    try:
+        location = Point(33.0980, -116.9967, 150)
+        weather_data = Daily(location, target_date, target_date)
+        weather_data = weather_data.fetch()
+        
+        if not weather_data.empty:
+            temp = weather_data['tmax'].fillna(70).astype(float).iloc[0] * 9/5 + 32  # Daily high in Fahrenheit
+            prec = weather_data['prcp'].fillna(0).astype(float).iloc[0]
+            return {'temperature': temp, 'precipitation': prec}
+        else:
+            return {'temperature': 75.0, 'precipitation': 0.0}
+    except Exception:
+        return {'temperature': 75.0, 'precipitation': 0.0}
+
+def input(request):
+    context = {}
+    
+    if request.method == 'POST':
+        date_str = request.POST.get('date')
+        attendance_str = request.POST.get('attendance')
+        
+        if date_str and attendance_str:
+            try:
+                date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+                attendance_count = int(attendance_str.replace(',', ''))
+                
+                # Get historical weather data for this date
+                weather_data = get_historical_weather_for_date(date_obj)
+                
+                # Check if entry already exists and update or create
+                entry, created = DailyAttendance.objects.get_or_create(
+                    date=date_obj,
+                    location=Location.objects.get(name='Safari Park'),
+                    defaults={
+                        'count': attendance_count,
+                        'high_temp': weather_data['temperature'],
+                        'precipitation': weather_data['precipitation']
+                    }
+                )
+                
+                if not created:
+                    # Update existing entry
+                    entry.count = attendance_count
+                    entry.high_temp = weather_data['temperature']
+                    entry.precipitation = weather_data['precipitation']
+                    entry.save()
+                    context['success'] = f"Updated attendance data for {date_obj.strftime('%B %d, %Y')} with {attendance_count} visitors!"
+                else:
+                    context['success'] = f"Added attendance data for {date_obj.strftime('%B %d, %Y')} with {attendance_count} visitors!"
+                
+            except ValueError as e:
+                context['error'] = f"Error processing data: {e}"
+            except Location.DoesNotExist:
+                context['error'] = "Safari Park location not found in database."
+            except Exception as e:
+                context['error'] = f"Unexpected error: {e}"
+    
+    # Get recent entries for display
+    try:
+        recent_entries = DailyAttendance.objects.filter(
+            location__name='Safari Park'
+        ).order_by('-date')[:10]
+        context['recent_entries'] = recent_entries
+    except:
+        context['recent_entries'] = []
+    
+    return render(request, 'dashboard/input.html', context)
 
 def homepage(request):
     """Return a nicely formatted hello world message with predictions."""
