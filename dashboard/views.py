@@ -385,6 +385,9 @@ def input(request):
     
     return render(request, 'dashboard/input.html', context)
 
+def calendar(request):
+    return render(request, 'dashboard/calendar.html')
+
 def homepage(request):
     """Return a nicely formatted hello world message with predictions."""
     
