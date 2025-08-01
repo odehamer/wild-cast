@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Wild Cast - Calendar Test</title>
+    <link rel="stylesheet" href="https://uicdn.toast.com/calendar/v2.1.3/toastui-calendar.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.css" />
+    <style>
+        * {
+            margin: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            height: 100%;
+        }
+
+        #calendar {
+            flex: 1 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <main id="calendar"></main>
+    </div>
+
+    <script src="https://uicdn.toast.com/calendar/v2.1.3/toastui-calendar.js"></script>
+    <script type="text/javascript" class="code-js">
+        document.addEventListener('DOMContentLoaded', function() {
+            var Calendar = window.tui.Calendar;
+            var cal = new Calendar('#calendar', {
+                usageStatistics: false,
+                defaultView: 'month',
+                calendars: [{
+                    id: '1',
+                    name: 'My Calendar',
+                    color: '#ffffff',
+                    borderColor: '#9e5fff',
+                    backgroundColor: '#9e5fff',
+                    dragBackgroundColor: '#9e5fff',
+                }]
+            });
+
+            cal.createEvents([
+                {
+                    id: 'event0',
+                    calendarId: '1',
+                    title: '4321',
+                    start: '2025-07-30',
+                    end: '2025-07-30',
+                    isAllday: true,
+                    isReadOnly: true,
+                    category: 'allday',
+                },
+                {
+                    id: 'event1',
+                    calendarId: '1',
+                    title: '5321',
+                    start: '2025-07-31',
+                    end: '2025-07-31',
+                    isAllday: true,
+                    isReadOnly: true,
+                    category: 'allday',
+                }
+            ]);
+        });
+    </script>
+</body>
+</html>
