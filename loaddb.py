@@ -47,3 +47,5 @@ with open('data/attendance.csv', 'r') as file:
             high_temp=temp,
             precipitation=prec
         )
+
+print("Daily attendance data loaded successfully.")
