@@ -20,8 +20,17 @@ class AttendancePrediction(models.Model):
     date = models.DateField()
     location = models.ForeignKey(Location, on_delete=models.CASCADE)
     value = models.FloatField()
+
+
+    def __str__(self):
+        return f"Prediction for {self.date} at {self.location}: {self.value}"
+    
+class SevenDayPrediction(models.Model):
+    date = models.DateField()
+    location = models.ForeignKey(Location, on_delete=models.CASCADE)
+    value = models.FloatField()
     high_temp = models.FloatField(blank=True, null=True)
     precipitation = models.FloatField(blank=True, null=True)
 
     def __str__(self):
-        return f"Prediction for {self.date} at {self.location}: {self.value}"
+        return f"7-Day Prediction for {self.date} at {self.location}: {self.value}"
